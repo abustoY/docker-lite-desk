@@ -30,4 +30,5 @@ MIT
 
 実際の画面例：
 
-![イメージ一覧表示](./main-view.jpeg)
+<img src="./main-container-view.png" alt="コンテナ一覧表示" width="600" />
+<img src="./main-image-view.png" alt="イメージ一覧表示" width="600" />
