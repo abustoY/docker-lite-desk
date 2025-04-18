@@ -1,9 +1,32 @@
 const { app, BrowserWindow, ipcMain } = require('electron');
 const path = require('path');
+const os = require('os');
+const privateKeyPath = path.join(os.homedir(), '.ssh', 'id_rsa_multipass');
 const { NodeSSH } = require('node-ssh');
 const { execSync } = require('child_process');
 
-const ssh = new NodeSSH();
+// IP取得とSSH接続の共通処理
+async function getSSHConnection() {
+  const ip = getMultipassIP();
+  return connectSSH(ip);
+}
+
+function getMultipassIP() {
+  const infoOutput = execSync('multipass info docker-vm').toString();
+  const ipMatch = infoOutput.match(/IPv4:\s+([0-9.]+)/);
+  if (!ipMatch) throw new Error('IPアドレスが取得できませんでした。');
+  return ipMatch[1];
+}
+
+async function connectSSH(ip) {
+  const ssh = new NodeSSH();
+  await ssh.connect({
+    host: ip,
+    username: 'ubuntu',
+    privateKey: require('fs').readFileSync(privateKeyPath, 'utf8')
+  });
+  return ssh;
+}
 
 function createWindow() {
   const win = new BrowserWindow({
@@ -24,89 +47,66 @@ function log(...args) {
   console.log('[DEBUG]', ...args);
 }
 
-ipcMain.handle('get-docker-containers', async () => {
-  try {
-    log('Multipass info 実行...');
-    const infoOutput = execSync('multipass info docker-vm').toString();
-    log('Multipass info 出力:', infoOutput);
+async function getAllContainers() {
+  const ssh = await getSSHConnection();
+  const result = await ssh.execCommand(
+    'docker ps -a --format "{{.ID}} {{.Image}} {{.Status}} {{.Names}}"'
+  );
 
-    const ipMatch = infoOutput.match(/IPv4:\s+([0-9.]+)/);
-    if (!ipMatch) throw new Error('IPアドレスが取得できませんでした。');
+  return result.stdout.trim().split('\n').map(line => {
+    const [id, image, ...rest] = line.split(' ');
+    const status = rest.slice(0, -1).join(' ');
+    const name = rest[rest.length - 1];
+    return { id, image, status, name };
+  });
+}
 
-    const ip = ipMatch[1];
-    log('取得したIP:', ip);
+async function dockerAction({ action, id }) {
+  const ssh = await getSSHConnection();
+  const result = await ssh.execCommand(`docker ${action} ${id}`);
+  return result.stderr ? `エラー: ${result.stderr}` : `${action} 実行完了`;
+}
 
-    const privateKeyPath = '/Users/akihiko/.ssh/id_rsa_multipass';
-    log('SSH接続中...');
+async function getDockerImages() {
+  const ssh = await getSSHConnection();
+  const result = await ssh.execCommand('docker images --format "{{.Repository}} {{.Tag}} {{.ID}} {{.Size}}"');
 
-    await ssh.connect({
-      host: ip,
-      username: 'ubuntu',
-      privateKey: require('fs').readFileSync('/Users/akihiko/.ssh/id_rsa_multipass', 'utf8')
-    });
-
-    log('SSH接続成功、docker ps 実行中...');
-    const result = await ssh.execCommand('docker ps --format "{{.ID}} {{.Image}} {{.Status}}"');
-    log('コマンド実行結果:', result);
-
-    return result.stdout || 'コンテナは起動していません';
-  } catch (err) {
-    log('エラーが発生しました:', err);
-    return `エラー: ${err.message}`;
-  }
-});
-
-
-
+  return result.stdout.trim().split('\n').map(line => {
+    const [repository, tag, id, ...rest] = line.split(' ');
+    const size = rest.join(' ');
+    return { repository, tag, id, size };
+  });
+}
 
 ipcMain.handle('get-all-containers', async () => {
   try {
-    const infoOutput = execSync('multipass info docker-vm').toString();
-    const ip = infoOutput.match(/IPv4:\s+([0-9.]+)/)?.[1];
-    const ssh = new NodeSSH();
-
-    await ssh.connect({
-      host: ip,
-      username: 'ubuntu',
-      privateKey: require('fs').readFileSync('/Users/akihiko/.ssh/id_rsa_multipass', 'utf8'),
-    });
-
-    const result = await ssh.execCommand(
-      'docker ps -a --format "{{.ID}} {{.Image}} {{.Status}} {{.Names}}"'
-    );
-
-    return result.stdout.trim().split('\n').map(line => {
-      const [id, image, ...rest] = line.split(' ');
-      const status = rest.slice(0, -1).join(' ');
-      const name = rest[rest.length - 1];
-      return { id, image, status, name };
-    });
+    log('Fetching all containers');
+    return await getAllContainers();
   } catch (err) {
+    log('Error fetching containers:', err);
     return [];
   }
 });
 
-ipcMain.handle('docker-action', async (_, { action, id }) => {
+ipcMain.handle('docker-action', async (_, payload) => {
   try {
-    const infoOutput = execSync('multipass info docker-vm').toString();
-    const ip = infoOutput.match(/IPv4:\s+([0-9.]+)/)?.[1];
-    const ssh = new NodeSSH();
-
-    await ssh.connect({
-      host: ip,
-      username: 'ubuntu',
-      privateKey: require('fs').readFileSync('/Users/akihiko/.ssh/id_rsa_multipass', 'utf8'),
-    });
-
-    const result = await ssh.execCommand(`docker ${action} ${id}`);
-    return result.stderr ? `エラー: ${result.stderr}` : `${action} 実行完了`;
+    log('Executing docker action:', payload);
+    return await dockerAction(payload);
   } catch (err) {
+    log('Error executing docker action:', err);
     return `エラー: ${err.message}`;
   }
 });
 
-
-
+ipcMain.handle('get-docker-images', async () => {
+  try {
+    log('Fetching docker images');
+    return await getDockerImages();
+  } catch (err) {
+    log('Error fetching docker images:', err);
+    return [];
+  }
+});
 
 app.whenReady().then(createWindow);
 app.on('window-all-closed', () => {
@@ -114,29 +114,4 @@ app.on('window-all-closed', () => {
 });
 app.on('activate', () => {
   if (BrowserWindow.getAllWindows().length === 0) createWindow();
-});
-
-
-ipcMain.handle('get-docker-images', async () => {
-  try {
-    const infoOutput = execSync('multipass info docker-vm').toString();
-    const ip = infoOutput.match(/IPv4:\s+([0-9.]+)/)?.[1];
-    const ssh = new NodeSSH();
-
-    await ssh.connect({
-      host: ip,
-      username: 'ubuntu',
-      privateKey: require('fs').readFileSync('/Users/akihiko/.ssh/id_rsa_multipass', 'utf8'),
-    });
-
-    const result = await ssh.execCommand('docker images --format "{{.Repository}} {{.Tag}} {{.ID}} {{.Size}}"');
-
-    return result.stdout.trim().split('\n').map(line => {
-      const [repository, tag, id, ...rest] = line.split(' ');
-      const size = rest.join(' ');
-      return { repository, tag, id, size };
-    });
-  } catch (err) {
-    return [];
-  }
 });
