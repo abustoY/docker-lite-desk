@@ -1,0 +1,4 @@
+{
+  "vmName": "docker-lite-vm",
+  "sshKeyPath": ".ssh/id_rsa_docker_lite"
+}

@@ -1,0 +1,47 @@
+#cloud-config
+# この設定ファイルはMultipass VM上でDockerサーバーをセットアップするためのものです
+# 注意: ポート2375を開放するため、セキュリティリスクがあります
+# 開発環境での使用に限定してください
+
+package_update: true
+package_upgrade: false
+
+packages:
+  - ca-certificates  # SSL証明書の検証に必要
+  - curl            # ファイルダウンロードに使用
+  - gnupg           # GPG鍵の管理に必要
+  - lsb-release     # ディストリビューション情報の取得に使用
+
+runcmd:
+  # GPG鍵保存ディレクトリの作成（Dockerの公式GPG鍵用）
+  - install -m 0755 -d /etc/apt/keyrings
+
+  # Dockerの公式GPG鍵をダウンロード（パッケージの検証に使用）
+  - curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+
+  # DockerのAPTレポジトリを追加（ARM64アーキテクチャ用）
+  - bash -c "echo 'deb [arch=arm64 signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu focal stable' > /etc/apt/sources.list.d/docker.list"  
+
+  # APTキャッシュを更新（新しいレポジトリを認識させるため）
+  - apt-get update
+
+  # Docker関連パッケージのインストール
+  # docker-ce: Docker Engine
+  # docker-ce-cli: Docker CLI
+  # containerd.io: コンテナランタイム
+  # docker-buildx-plugin: マルチアーキテクチャビルド用
+  # docker-compose-plugin: Docker Compose V2
+  - apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+
+  # Ubuntuユーザーをdockerグループに追加（sudoなしでDockerコマンドを実行可能に）
+  - usermod -aG docker ubuntu
+
+  # Dockerデーモンの設定変更
+  # -H tcp://0.0.0.0:2375: すべてのネットワークインターフェースでポート2375をリッスン
+  # -H fd://: Unixソケットも引き続き使用
+  - sed -i -e 's|ExecStart=/usr/bin/dockerd -H fd://|ExecStart=/usr/bin/dockerd -H tcp://0.0.0.0:2375 -H fd://|' /lib/systemd/system/docker.service
+
+  # Dockerサービスの設定をリロード＆再起動
+  - systemctl daemon-reload
+  - systemctl enable docker  # システム起動時に自動起動
+  - systemctl restart docker

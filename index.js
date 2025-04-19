@@ -1,9 +1,61 @@
 const { app, BrowserWindow, ipcMain } = require('electron');
 const path = require('path');
+const config = require('./config.json');
 const os = require('os');
-const privateKeyPath = path.join(os.homedir(), '.ssh', 'id_rsa_multipass');
+const privateKeyPath = path.join(os.homedir(), config.sshKeyPath || '.ssh/id_rsa_multipass');
 const { NodeSSH } = require('node-ssh');
 const { execSync } = require('child_process');
+
+const fs = require('fs');
+const vmName = config.vmName;
+const cloudInitPath = path.join(__dirname, 'cloud-config.yml');
+
+async function setupEnvironment() {
+  try {
+    console.log('[DEBUG] 環境セットアップ開始');
+
+    // Multipass VM の存在確認
+    const vmList = execSync('multipass list').toString();
+    if (!vmList.includes(vmName)) {
+      console.log('[DEBUG] VM作成: cloud-config.yml を使用します');
+      execSync(`multipass launch -n ${vmName} --cloud-init ${cloudInitPath}`);
+    }
+
+    // SSH鍵の存在確認
+    if (!fs.existsSync(privateKeyPath)) {
+      console.log('[DEBUG] SSH鍵を作成します...');
+      execSync(`ssh-keygen -t rsa -b 2048 -f ${privateKeyPath} -N ""`);
+    }
+
+    // 公開鍵をVMに登録
+    const pubKey = fs.readFileSync(privateKeyPath + '.pub', 'utf8');
+    execSync(`multipass exec ${vmName} -- mkdir -p /home/ubuntu/.ssh`);
+    execSync(`multipass exec ${vmName} -- bash -c "echo '${pubKey}' >> /home/ubuntu/.ssh/authorized_keys"`);
+
+    console.log('[DEBUG] 環境セットアップ完了');
+
+    // Docker context 自動作成・切り替え
+    try {
+      const ip = getMultipassIP();
+      const contextName = vmName;
+
+      const existingContexts = execSync('docker context ls').toString();
+      if (!existingContexts.includes(contextName)) {
+        console.log('[DEBUG] Docker context を作成します...');
+        execSync(`docker context create ${contextName} --docker "host=tcp://${ip}:2375"`);
+      } else {
+        console.log('[DEBUG] Docker context は既に存在します');
+      }
+
+      execSync(`docker context use ${contextName}`);
+      console.log(`[DEBUG] Docker context '${contextName}' を使用中`);
+    } catch (e) {
+      console.error('[ERROR] Docker context 設定に失敗:', e.message);
+    }
+  } catch (e) {
+    console.error('[ERROR] setupEnvironment 失敗:', e.message);
+  }
+}
 
 // IP取得とSSH接続の共通処理
 async function getSSHConnection() {
@@ -12,7 +64,7 @@ async function getSSHConnection() {
 }
 
 function getMultipassIP() {
-  const infoOutput = execSync('multipass info docker-vm').toString();
+  const infoOutput = execSync(`multipass info ${vmName}`).toString();
   const ipMatch = infoOutput.match(/IPv4:\s+([0-9.]+)/);
   if (!ipMatch) throw new Error('IPアドレスが取得できませんでした。');
   return ipMatch[1];
@@ -108,7 +160,12 @@ ipcMain.handle('get-docker-images', async () => {
   }
 });
 
-app.whenReady().then(createWindow);
+// app.whenReady().then(createWindow);
+
+app.whenReady().then(async () => {
+  await setupEnvironment();
+  createWindow();
+});
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') app.quit();
 });
