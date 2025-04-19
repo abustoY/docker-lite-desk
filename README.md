@@ -32,8 +32,8 @@ npm start
 
 ```json
 {
-  "vmName": "test-1227",
-  "sshKeyPath": ".ssh/id_rsa_multipass"
+  "vmName": "docker-lite-vm",
+  "sshKeyPath": ".ssh/id_rsa_docker_lite"
 }
 ```
 
