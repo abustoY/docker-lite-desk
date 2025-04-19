@@ -8,6 +8,7 @@
     <link href="https://cdn.jsdelivr.net/npm/vuetify@3.3.22/dist/vuetify.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/vue@3.4.21/dist/vue.global.prod.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/vuetify@3.3.22/dist/vuetify.min.js"></script>
+    <script src="./app.js" defer></script>
     <style>
         body {
             background-color: #f5faff;
@@ -102,78 +103,6 @@
             </v-main>
         </v-app>
     </div>
-
-    <script>
-        const { createApp, ref, watch } = Vue; // ← watch を追加
-        const vuetify = Vuetify.createVuetify();
-
-        createApp({
-            setup() {
-                const tab = ref('containers');
-                const containers = ref([]);
-                const images = ref([]);
-                const message = ref('');
-                const error = ref('');
-
-                const fetchContainers = async () => {
-                    try {
-                        error.value = '';
-                        containers.value = await window.api.getAllContainers();
-                    } catch (e) {
-                        error.value = e.message || '取得に失敗しました';
-                    }
-                };
-
-                const fetchImages = async () => {
-                    try {
-                        error.value = '';
-                        images.value = await window.api.getAllImages();
-                    } catch (e) {
-                        error.value = e.message || '取得に失敗しました';
-                    }
-                };
-
-                const dockerAction = async (action, id) => {
-                    const res = await window.api.dockerAction(action, id);
-                    message.value = res;
-                    setTimeout(() => (message.value = ''), 3000);
-
-                    if (tab.value === 'containers') {
-                        await fetchContainers();
-                    } else if (tab.value === 'images') {
-                        await fetchImages();
-                    }
-                };
-
-                // 初回：アクティブなタブに応じて読み込み
-                if (tab.value === 'containers') {
-                    fetchContainers();
-                } else if (tab.value === 'images') {
-                    fetchImages();
-                }
-
-                // タブが切り替わった時にも自動で読み込み
-                watch(tab, (newTab) => {
-                    if (newTab === 'containers') {
-                        fetchContainers();
-                    } else if (newTab === 'images') {
-                        fetchImages();
-                    }
-                });
-
-                return {
-                    tab,
-                    containers,
-                    images,
-                    message,
-                    error,
-                    fetchContainers,
-                    fetchImages,
-                    dockerAction
-                };
-            }
-        }).use(vuetify).mount('#app');
-    </script>
 
 
 </body>
