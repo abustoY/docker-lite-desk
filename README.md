@@ -1,7 +1,8 @@
 # docker-lite-desk
 
-Multipass + Docker を操作できる、GUIデスクトップアプリケーションです。
-Docker Desktop と同等の使いやすさを目指し、CLI 操作や VM セットアップを自動化しています。
+Docker Desktop の代替として使える、シンプルで扱いやすい GUI アプリケーションです。  
+仮想マシン上で Docker を自動的に構築し、CLI を使わずにコンテナやイメージの管理が可能です。
+
 
 ---
 
