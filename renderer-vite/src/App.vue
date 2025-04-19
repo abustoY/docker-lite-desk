@@ -119,22 +119,3 @@ watch(tab, (newTab) => {
   }
 }, { immediate: true });
 </script>
-
-<!-- <style>
-        body {
-            background-color: #f5faff;
-            font-family: 'Noto Sans JP', sans-serif;
-        }
-
-        v-card {
-            border-radius: 12px;
-            background-color: #ffffff;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        }
-
-        v-btn {
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-            background-color: #e0f7fa;
-        }
-    </style> -->
