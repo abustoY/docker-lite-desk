@@ -1,6 +1,6 @@
 # docker-lite-desk
 
-Multipass + Docker を操作できる、軽量かつGUI付きの Electron アプリケーションです。  
+Multipass + Docker を操作できる、GUIデスクトップアプリケーションです。
 Docker Desktop と同等の使いやすさを目指し、CLI 操作や VM セットアップを自動化しています。
 
 ---
@@ -20,7 +20,7 @@ Docker Desktop と同等の使いやすさを目指し、CLI 操作や VM セッ
 以下の手順で、Docker Lite Desk をすぐに使い始めることができます。
 
 ```bash
-git clone https://github.com/yourname/docker-lite-desk.git
+git clone https://github.com/abustoY/docker-lite-desk.git
 cd docker-lite-desk
 npm install
 npm start
