@@ -1,0 +1,24 @@
+{
+    "name": "renderer-vite",
+    "version": "0.0.1",
+    "scripts": {
+        "dev": "vite",
+        "build": "vite build",
+        "preview": "vite preview"
+    },
+    "dependencies": {
+        "@mdi/font": "^7.4.47",
+        "vite-plugin-vuetify": "^2.1.1",
+        "vue": "^3.5.13",
+        "vuetify": "^3.8.2"
+    },
+    "devDependencies": {
+        "@types/vue": "^1.0.31",
+        "@vitejs/plugin-vue": "^5.0.4",
+        "@vue/tsconfig": "^0.7.0",
+        "sass": "^1.69.5",
+        "typescript": "^5.3.3",
+        "vite": "^5.4.18",
+        "vue-tsc": "^1.8.13"
+    }
+}

@@ -91,7 +91,7 @@ function createWindow() {
     },
   });
 
-  win.loadFile('renderer/index.html');
+  win.loadFile('renderer-vite/dist/index.html');
 }
 
 // デバッグ用ログ関数
