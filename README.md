@@ -23,6 +23,14 @@ Docker Desktop と同等の使いやすさを目指し、CLI 操作や VM セッ
 git clone https://github.com/abustoY/docker-lite-desk.git
 cd docker-lite-desk
 npm install
+
+# フロントエンド（UI）のビルド
+cd renderer-vite
+npm install
+npm run build
+cd ..
+
+# アプリの起動
 npm start
 ```
 
