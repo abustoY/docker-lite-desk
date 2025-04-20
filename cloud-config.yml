@@ -20,7 +20,7 @@ runcmd:
   - curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
 
   # DockerのAPTレポジトリを追加（ARM64アーキテクチャ用）
-  - bash -c "echo 'deb [arch=arm64 signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu focal stable' > /etc/apt/sources.list.d/docker.list"  
+  - bash -c "ARCH=$(dpkg --print-architecture) && echo \"deb [arch=$ARCH signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu focal stable\" > /etc/apt/sources.list.d/docker.list"
 
   # APTキャッシュを更新（新しいレポジトリを認識させるため）
   - apt-get update
