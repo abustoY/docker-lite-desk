@@ -35,6 +35,7 @@ cd ..
 npm start
 ```
 
+
 ### 🔧 設定ファイル（任意）
 
 `config.json` を使うことで、VM名やSSH鍵パスをカスタマイズできます。
@@ -49,8 +50,18 @@ npm start
 - `vmName`: Multipass上で作成される仮想マシンの名前
 - `sshKeyPath`: SSH鍵のパス（ホームディレクトリからの相対パス）
 
+
+
 ---
 
+## 🔽 ダウンロード（macOS向けアプリを使いたい人向け）
+
+Docker Lite Desk を `.dmg` ファイルとしてダウンロードできます。
+
+👉 [最新版をダウンロード（.dmg）](https://github.com/abustoY/docker-lite-desk/releases/download/v1.0.0/Docker.Lite.Desk-1.0.0-arm64.dmg)
+
+
+---
 ## ✅ 初回起動時の自動処理
 
 初回起動時に以下が自動で実行されます：
