@@ -11,7 +11,7 @@ Docker Desktop の代替として使える、シンプルで扱いやすい GUI 
 | 項目       | 内容                                                                 |
 |------------|----------------------------------------------------------------------|
 | ✅ Node.js | バージョン 18 以上（推奨：`nvm install 18 && nvm use 18`）            |
-| ✅ Multipass | https://multipass.run/ よりインストール（macOS対応済み）               |
+| ✅ Multipass | https://multipass.run/ よりインストール
 | ✅ インターネット接続 | 初回起動時に必要（MultipassのOSイメージとDocker関連パッケージの取得） |
 
 ---
