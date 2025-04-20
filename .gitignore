@@ -7,3 +7,6 @@ renderer-vite/dist/
 
 # Node modules
 renderer-vite/node_modules/
+
+# Electron distribution artifacts (e.g. .dmg, .exe, AppImage, etc.)
+dist/

@@ -5,15 +5,46 @@
   "main": "index.js",
   "scripts": {
     "start": "electron .",
+    "build:ui": "cd renderer-vite && npm install && npm run build",
+    "dist": "npm run build:ui && electron-builder",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "electron": "^35.1.5"
+    "electron": "^35.1.5",
+    "electron-builder": "^24.6.0"
   },
   "dependencies": {
-    "node-ssh": "^13.2.1"
+    "node-ssh": "^13.2.1",
+    "shell-env": "^2.0.0"
+  },
+  "build": {
+    "appId": "com.abustoy.dockerlitedesk",
+    "productName": "Docker Lite Desk",
+    "files": [
+      "index.js",
+      "preload.js",
+      "config.json",
+      "cloud-config.yml",
+      "renderer-vite/dist/**/*"
+    ],
+    "directories": {
+      "buildResources": "build"
+    },
+    "mac": {
+      "icon": "build/myicon.icns",
+      "target": "dmg"
+    },
+    "win": {
+      "target": "nsis"
+    },
+    "linux": {
+      "target": [
+        "AppImage",
+        "deb"
+      ]
+    }
   }
 }

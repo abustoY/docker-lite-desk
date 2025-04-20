@@ -5,6 +5,11 @@ const os = require('os');
 const privateKeyPath = path.join(os.homedir(), config.sshKeyPath || '.ssh/id_rsa_multipass');
 const { NodeSSH } = require('node-ssh');
 const { execSync } = require('child_process');
+const shellEnv = require('shell-env');
+shellEnv().then(env => {
+  process.env.PATH = env.PATH;
+  console.log('[DEBUG] shell-env PATH:', process.env.PATH);
+});
 
 const fs = require('fs');
 const vmName = config.vmName;

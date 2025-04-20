@@ -24,7 +24,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue';
+import { ref, watch, onMounted } from 'vue';
 import ContainerList from './components/ContainerList.vue';
 import ImageList from './components/ImageList.vue';
 import Notification from './components/Notification.vue';
@@ -39,6 +39,7 @@ const fetchContainers = async () => {
   try {
     error.value = '';
     containers.value = await window.api.getAllContainers();
+    console.log('[DEBUG] containers:', containers.value); 
   } catch (e: any) {
     error.value = e.message || '取得に失敗しました';
   }
@@ -72,4 +73,23 @@ watch(tab, (newTab) => {
     fetchImages();
   }
 }, { immediate: true });
+
+// macOSでDockやFinderなどからGUI起動した場合、Electronの環境初期化が遅れることがある。
+// 特にdocker contextやPATHの反映が間に合わず、初回のgetAllContainers()が空配列になるケースがある。
+// そのため初回のみ数回リトライして再取得を行い、UIに確実に反映させるための処理。
+const waitForApiAndFetch = async (retry = 5) => {
+  await fetchContainers();
+  if (containers.value.length === 0 && retry > 0) {
+    console.log('[DEBUG] Empty containers, retrying...');
+    setTimeout(() => waitForApiAndFetch(retry - 1), 300);
+  }
+};
+
+onMounted(() => {
+  if (tab.value === 'containers') {
+    waitForApiAndFetch();
+  } else {
+    fetchImages();
+  }
+});
 </script>
