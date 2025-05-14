@@ -35,7 +35,7 @@
     },
     "mac": {
       "icon": "build/myicon.icns",
-      "target": "dmg"
+      "target": ["zip","dmg"]
     },
     "win": {
       "target": "nsis"
