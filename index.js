@@ -23,7 +23,7 @@ async function setupEnvironment() {
     const vmList = execSync('multipass list').toString();
     if (!vmList.includes(vmName)) {
       console.log('[DEBUG] VM作成: cloud-config.yml を使用します');
-      execSync(`multipass launch -n ${vmName} --cloud-init ${cloudInitPath}`);
+      execSync(`multipass launch -n ${vmName} --disk 20G --memory 2G --cloud-init ${cloudInitPath}`);
     }
 
     // SSH鍵の存在確認
