@@ -58,7 +58,7 @@ npm start
 
 Docker Lite Desk を `.dmg` ファイルとしてダウンロードできます。
 
-👉 [最新版をダウンロード（.dmg）](https://github.com/abustoY/docker-lite-desk/releases/download/v1.0.0/Docker.Lite.Desk-1.0.0-arm64.dmg)
+👉 [最新版をダウンロード（.dmg）](https://github.com/abustoY/docker-lite-desk/releases/download/v1.0.1/Docker.Lite.Desk-1.0.0-arm64.dmg)
 
 ### ⚠️ `.dmg` を開こうとすると「壊れているため開けません」と表示される場合
 
