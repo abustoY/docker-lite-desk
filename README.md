@@ -93,3 +93,27 @@ xattr -d com.apple.quarantine /Applications/Docker\ Lite\ Desk.app
 ## 📄 ライセンス
 
 MIT
+
+---
+
+## 🔁 リセット手順（完全な初期状態に戻す）
+
+アプリを「初回起動と同じ状態」に完全リセットしたい場合は、以下の手順を実行してください：
+
+```bash
+# 1. Multipass VM の削除
+multipass delete docker-lite-vm
+multipass purge
+
+# 2. Docker context の削除（現在使用中の context は削除できないから、コンテキストを切り替える）
+docker context use default
+docker context rm docker-lite-vm
+
+# 3. SSH鍵の削除
+rm ~/.ssh/id_rsa_docker_lite ~/.ssh/id_rsa_docker_lite.pub
+
+# 4. アプリの再起動（自動再構築）
+npm start
+```
+
+これにより、VM・Docker context・SSH鍵がすべて初期化され、次回起動時に自動的に再構築されます。
