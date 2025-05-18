@@ -12,6 +12,26 @@ packages:
   - gnupg           # GPG鍵の管理に必要
   - lsb-release     # ディストリビューション情報の取得に使用
 
+# write_files セクションでは、UbuntuのバージョンやCPUアーキテクチャに依存せず
+# 正しいDockerリポジトリを自動で設定するためのスクリプトを作成しています。
+# ハードコーディングを避けることで、Ubuntuの将来バージョン（例: noble, orca等）や
+# x86_64 / arm64 など異なるアーキテクチャでも安全かつ柔軟に対応できます。
+write_files:
+  - path: /usr/local/bin/setup-docker-repo.sh
+    permissions: '0755'
+    content: |
+      #!/bin/bash
+      set -e
+
+      # システムアーキテクチャ（例: arm64）を取得
+      ARCH=$(dpkg --print-architecture)
+
+      # ディストリビューションのコードネーム（例: noble）を取得
+      CODENAME=$(awk -F= '/VERSION_CODENAME/ {print $2}' /etc/os-release)
+
+      # Docker の APT リポジトリ設定を追加
+      echo "deb [arch=${ARCH} signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu ${CODENAME} stable" > /etc/apt/sources.list.d/docker.list
+
 runcmd:
   # GPG鍵保存ディレクトリの作成（Dockerの公式GPG鍵用）
   - install -m 0755 -d /etc/apt/keyrings
@@ -19,8 +39,8 @@ runcmd:
   # Dockerの公式GPG鍵をダウンロード（パッケージの検証に使用）
   - curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
 
-  # DockerのAPTレポジトリを追加（ARM64アーキテクチャ用）
-  - bash -c "ARCH=$(dpkg --print-architecture) && echo \"deb [arch=$ARCH signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu focal stable\" > /etc/apt/sources.list.d/docker.list"
+  # DockerのAPTレポジトリを追加
+  - /usr/local/bin/setup-docker-repo.sh
 
   # APTキャッシュを更新（新しいレポジトリを認識させるため）
   - apt-get update
